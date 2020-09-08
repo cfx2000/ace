@@ -25,15 +25,16 @@ for j in range(depth):  # 对每一个页面进行处理，使用for循环
             print("抓取异常")
         try:
             plt = re.findall(r'<span>￥<!-- -->.*?\.\d\d</span></p>', html)  # 获取商品价格
-            tlt = re.findall(r'"goodsName":"[^\x00-\xff]+', html)   #商品名
+            tlt = re.findall(r'\"goodsName\":\".*?\"', html)   #商品名
             jlt =  re.findall(r'ImageUrl":"https://.+?.jpeg', html)   #商品图片地址
             wlt = re.findall(r'goodsId=[1-9]\d*', html)   #商品链接
             for i in range(len(plt)):
                 price = plt[i].split('-->')[1].split('</span>')[0]
-                title = tlt[i].split(':"')[1]
+                title = tlt[i].split(':"')[1].split('"')[0]
                 img = jlt[i].split(':"')[1]
                 spid = wlt[i].split('=')[1]
-                infoList.append([price, title, img, spid])
+                sp = 'https://youhui.pinduoduo.com/goods/goods-detail?goodsId='+spid
+                infoList.append([price, title, img, sp])
         except:
             print(" ")
     except:
@@ -46,7 +47,7 @@ print(tplt.format("序号", "价格","商品名称","商品图片","商品链接
 count = 0
 for g in infoList:
     count = count + 1
-    print(tplt.format(count, g[0], g[1], g[2], 'https://youhui.pinduoduo.com/goods/goods-detail?goodsId='+g[3]))  # 打印商品信息
+    print(tplt.format(count, g[0], g[1], g[2], g[3]))  # 打印商品信息
 with open("pdd.txt","a") as f:                                                   #设置文件对象
     for i in infoList:                                                                 #对于双层列表中的数据
         i = str(i).strip('[').strip(']').replace(',','').replace('\'','')+'\n'  #将其中每一个列表规范化成字符串

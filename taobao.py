@@ -32,27 +32,33 @@ def parsePage(ilist, html):
     try:
         plt = re.findall(r'\"view_price\":\"\d+\.\d*\"', html)  # 正则匹配，返回值是列表形式
         tlt = re.findall(r'\"raw_title\":\".*?\"', html)
+        jlt = re.findall(r'(?<=pic_url":").*?","detail_url', html)  # 商品图片地址
+        wlt = re.findall(r'"nid":"[1-9]\d*', html)  # 商品链接
         # print(tlt)
         print(len(plt))
         for i in range(len(plt)):  # 遍历所有的列表中的项
             price = eval(plt[i].split('\"')[3])  # 去掉双引号，以：分割字符串
             title = tlt[i].split('\"')[3]
-            ilist.append([title, price])  # 把商品信息添加到ilt中
+            photo = jlt[i].split('",')[0]
+            photo = 'https:'+photo
+            spid = wlt[i].split(':"')[1]
+            sp = 'https://item.taobao.com/item.htm?ft=t&spm=a230r.1.14.42.4a606a14Kz27Qe&id='+spid+'&ns=1&abbucket=2'
+            ilist.append([title, price, photo, sp])  # 把商品信息添加到ilt中
         # print(ilist)
     except:
-        print("解析出错")
+        print("...")
 
 
 # 打印信息
 def printGoodsList(ilist, num):
     print("=====================================================================================================")
-    tplt = "{0:<3}\t{1:<30}\t{2:>6}"  # 规定一定的format格式
-    print(tplt.format("序号", "商品名称", "价格"))  # 表头
+    tplt = "{:^10}\t{:^10}\t{:^40}\t{:^60}\t{:^60}" # 规定一定的format格式
+    print(tplt.format("序号", "商品名称", "价格", "图片", "商品链接"))  # 表头
     count = 0
     for g in ilist:
         count += 1
         if count <= num:
-            print(tplt.format(count, g[0], g[1]))
+            print(tplt.format(count, g[0], g[1],g[2],g[3]))
     print("=====================================================================================================")
 
 
@@ -60,10 +66,10 @@ def printGoodsList(ilist, num):
 # 主函数
 def main():
     goods = input("请输入商品名: ")
-    depth = 2  # 爬取深度
+    depth = 1  # 爬取深度
     start_url = "https://s.taobao.com/search?q=" + goods  # 第一页
     infoList = []
-    num = 20
+    num = 48*depth
     for i in range(depth):
         try:
             url = start_url + '$S=' + str(44 * i)  # 翻页
@@ -73,6 +79,9 @@ def main():
             continue
 
     printGoodsList(infoList, num)
-
+    with open("taobao.txt", "a") as f:  # 设置文件对象
+        for i in infoList:  # 对于双层列表中的数据
+            i = str(i).strip('[').strip(']').replace(',', '').replace('\'', '') + '\n'  # 将其中每一个列表规范化成字符串
+            f.write(i)
 
 main()
